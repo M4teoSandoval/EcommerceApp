@@ -1,4 +1,4 @@
-package com.mateosandoval.ecommerceapp.ui.theme
+package com.mateosandoval.ecommerceapp
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
