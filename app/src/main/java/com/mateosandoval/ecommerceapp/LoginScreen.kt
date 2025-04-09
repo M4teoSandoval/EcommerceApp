@@ -47,7 +47,7 @@ fun LoginScreen() {
             Image(
                 painter = painterResource(id = R.drawable.logo_unab),
                 contentDescription = "Logo Unab",
-                modifier = Modifier.size(150.dp)
+                modifier = Modifier.size(200.dp)
             )
             Spacer(modifier = Modifier.height(32.dp))
             Text(
