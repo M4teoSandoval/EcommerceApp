@@ -23,19 +23,19 @@ class MainActivity : ComponentActivity() {
         setContent {
             EcommerceAppTheme {
 
-                val mynavController = rememberNavController()
+                val myNavController = rememberNavController()
                 val myStartDestination: String = "login"
 
                 NavHost(
-                    navController = mynavController,
+                    navController = myNavController,
                     startDestination = myStartDestination,
                     modifier = Modifier.fillMaxSize()
                 ) {
                     composable("login") {
-                        LoginScreen()
+                        LoginScreen(myNavController)
                     }
                     composable("register") {
-                        RegisterScreen()
+                        RegisterScreen(myNavController)
                     }
 
 
