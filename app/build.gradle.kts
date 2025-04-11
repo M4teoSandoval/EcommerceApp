@@ -68,4 +68,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     //ESTA ES LA LIBRERIA DE NAVEGACION
     implementation(libs.androidx.navigation.compose)
+    //Esta es la libreria para cargar imagenes de internet
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+
 }
