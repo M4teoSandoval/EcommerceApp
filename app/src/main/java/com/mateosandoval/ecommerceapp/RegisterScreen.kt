@@ -46,7 +46,8 @@ fun RegisterScreen(navController: NavController) {
                     Text(text = "", color = Color(0xFFFF9900))
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { navController.popBackStack()
+                    }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back",
