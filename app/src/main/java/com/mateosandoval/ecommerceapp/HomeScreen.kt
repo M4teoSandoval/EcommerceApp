@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
+
 
 package com.mateosandoval.ecommerceapp
 
@@ -40,6 +40,7 @@ import coil3.compose.rememberAsyncImagePainter
 
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
     Scaffold(

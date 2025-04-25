@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "24858890619",
+    "project_id": "ecommerceapp-4fe82",
+    "storage_bucket": "ecommerceapp-4fe82.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:24858890619:android:b10b1e47d7170d9249edde",
+        "android_client_info": {
+          "package_name": "com.mateosandoval.ecommerceapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCud_UQ_LhuG5iBxI6brSIAPV-CorlkCnc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
