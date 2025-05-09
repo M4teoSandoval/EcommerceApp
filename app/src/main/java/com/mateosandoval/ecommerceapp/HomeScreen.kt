@@ -15,6 +15,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -37,12 +39,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil3.compose.rememberAsyncImagePainter
-
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(onClickLogOut: () -> Unit) {
+
+    val auth = Firebase.auth
+    val user = auth.currentUser
+
+
     Scaffold(
         topBar = {
             val scrollBehavior =
@@ -72,7 +80,7 @@ fun HomeScreen(navController: NavController) {
                 },
                 actions = {
                     IconButton(onClick = {
-                        navController.popBackStack()
+                        onClickLogOut()
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ExitToApp,
@@ -116,6 +124,23 @@ fun HomeScreen(navController: NavController) {
 
             }
 
+            if (user != null) {
+                Text(user.email.toString())
+            }else{
+                Text("No hay usuario")
+
+            }
+            Button(onClick = {
+                auth.signOut()
+                onClickLogOut()
+            },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFF9900)
+                )
+                ) {
+                Text("Cerrar Sesión")
+            }
+
         }
 
 
@@ -124,11 +149,6 @@ fun HomeScreen(navController: NavController) {
 
     }
 
-    @Preview
-    @Composable
-    fun HomeScreenPreview() {
-        HomeScreen(navController = NavController(LocalContext.current))
-    }
 
 
     @Composable

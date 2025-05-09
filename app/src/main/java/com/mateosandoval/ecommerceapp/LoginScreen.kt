@@ -9,9 +9,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
@@ -33,6 +37,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -40,20 +46,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.auth
 
 
 @Composable
-fun LoginScreen(navController: NavController) {
+fun LoginScreen(onClickRegister: () -> Unit, onSuccessfulLogin: () -> Unit) {
 
     //Estados de los inputs
     var inputEmail by remember { mutableStateOf("") }
     var inputPassword by remember { mutableStateOf("") }
+    var LoginError by remember { mutableStateOf("") }
+    var EmailError by remember { mutableStateOf("") }
+    var PasswordError by remember { mutableStateOf("") }
 
     val activity = LocalView.current.context as Activity
-
-    var isEmaiValid by remember { mutableStateOf(false) }
-    var isPasswordValid by remember { mutableStateOf(false) }
+    val auth = Firebase.auth
 
     Scaffold { innerPadding ->
 
@@ -61,6 +70,9 @@ fun LoginScreen(navController: NavController) {
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+
                 .padding(horizontal = 30.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -99,7 +111,22 @@ fun LoginScreen(navController: NavController) {
                         tint = Color(0xFFFF9900)
                     )
                 },
-                shape = RoundedCornerShape(13.dp)
+                shape = RoundedCornerShape(13.dp),
+                supportingText = {
+                    if (EmailError.isNotEmpty()) {
+                        Text(
+                            text = EmailError,
+                            color = Color.Red,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    capitalization = KeyboardCapitalization.None,
+                    autoCorrect = false,
+                )
+
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -124,24 +151,70 @@ fun LoginScreen(navController: NavController) {
                         tint = Color(0xFFFF9900)
                     )
                 },
-                shape = RoundedCornerShape(13.dp)
+                shape = RoundedCornerShape(13.dp),
+                supportingText = {
+                    if (PasswordError.isNotEmpty()) {
+                        Text(
+                            text = PasswordError,
+                            color = Color.Red,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    capitalization = KeyboardCapitalization.None,
+                    autoCorrect = false,
+
+                    )
+
             )
 
+
             Spacer(modifier = Modifier.height(24.dp))
+            if (LoginError.isNotEmpty()) {
+                Text(
+                    LoginError,
+                    color = Color.Red,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 10.dp)
+
+                )
+
+
+            }
+
 
             Button(
                 onClick = {
-                    val auth = Firebase.auth
 
-                    auth.signInWithEmailAndPassword(inputEmail, inputPassword)
-                        .addOnCompleteListener() { task ->
+                    val isValidEmail = validateEmail(inputEmail).first
+                    val isValidPassword = validatePassword(inputPassword).first
+                    EmailError = validateEmail(inputEmail).second
+                    PasswordError = validateEmail(inputPassword).second
 
-                            if (task.isSuccessful) {
-                                navController.navigate("home")
-                            } else {
-                                Log.i("Login", "Login failed")
+                    if (isValidEmail && isValidPassword) {
+
+                        auth.signInWithEmailAndPassword(inputEmail, inputPassword)
+                            .addOnCompleteListener() { task ->
+
+                                if (task.isSuccessful) {
+                                    onSuccessfulLogin()
+                                } else {
+                                    LoginError = when (task.exception) {
+                                        is FirebaseAuthInvalidUserException -> "El usuario no existe"
+                                        is FirebaseAuthInvalidCredentialsException -> "Correo o contraseña incorrecta"
+                                        else -> "Error al iniciar sesión. Inténtalo de nuevo"
+
+                                    }
+                                }
                             }
-                        }
+
+                    } else {
+
+                    }
 
 
                 },
@@ -159,10 +232,7 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(1.dp))
 
-            TextButton(onClick = {
-                navController.navigate("register")
-
-            }) {
+            TextButton(onClick = onClickRegister) {
                 Text(
                     text = "No tienes una cuenta? Regístrate",
                     color = Color(0xFFFF9900),
@@ -172,19 +242,12 @@ fun LoginScreen(navController: NavController) {
 
         }
 
+
+
+
     }
 
 }
 
-fun validateEmail(email: String): Pair<Boolean, String> {
-    return when {
 
-        email.isEmpty() -> return Pair(false, "El email no puede estar vacío")
-        !email.endsWith("@unab.edu.co") -> return Pair(
-            false,
-            "El email debe terminar con @unab.edu.co"
-        )
-        else -> return Pair(true, "")
 
-    }
-}

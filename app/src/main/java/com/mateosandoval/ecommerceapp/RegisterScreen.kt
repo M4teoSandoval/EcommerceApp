@@ -1,5 +1,6 @@
 package com.mateosandoval.ecommerceapp
 
+import android.app.Activity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,20 +26,48 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.auth
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterScreen(navController: NavController) {
+fun RegisterScreen(onClickBack: () -> Unit, onSuccessfulRegister: () -> Unit) {
+
+    val auth = Firebase.auth
+    val activity = LocalView.current.context as Activity
+
+    var inputEmail by remember { mutableStateOf("") }
+    var inputPassword by remember { mutableStateOf("") }
+    var inputName by remember { mutableStateOf("") }
+    var inputConfirmPassword by remember { mutableStateOf("") }
+
+
+    var nameError by remember { mutableStateOf("") }
+    var emailError by remember { mutableStateOf("") }
+    var passwordError by remember { mutableStateOf("") }
+    var confirmPasswordError by remember { mutableStateOf("") }
+
+    var registerError by remember { mutableStateOf("") }
+
+
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -46,8 +75,7 @@ fun RegisterScreen(navController: NavController) {
                     Text(text = "", color = Color(0xFFFF9900))
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack()
-                    }) {
+                    IconButton(onClick = onClickBack) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back",
@@ -85,8 +113,10 @@ fun RegisterScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(20.dp))
 
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = inputEmail,
+                onValueChange = {
+                    inputEmail = it
+                },
                 label = {
                     Text(
                         text = "Email",
@@ -101,14 +131,24 @@ fun RegisterScreen(navController: NavController) {
                         tint = Color(0xFFFF9900)
                     )
                 },
-                shape = RoundedCornerShape(13.dp)
+                shape = RoundedCornerShape(13.dp),
+                supportingText = {
+                    if (emailError.isNotEmpty()) {
+                        Text(
+                            text = emailError,
+                            color = Color.Red
+                        )
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(10.dp))
 
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = inputName,
+                onValueChange = {
+                    inputName = it
+                },
                 label = {
                     Text(
                         text = "Nombre Completo",
@@ -123,14 +163,24 @@ fun RegisterScreen(navController: NavController) {
                         tint = Color(0xFFFF9900)
                     )
                 },
-                shape = RoundedCornerShape(13.dp)
+                shape = RoundedCornerShape(13.dp),
+                supportingText = {
+                    if (nameError.isNotEmpty()) {
+                        Text(
+                            text = nameError,
+                            color = Color.Red
+                        )
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(10.dp))
 
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = inputPassword,
+                onValueChange = {
+                    inputPassword = it
+                },
                 label = {
                     Text(
                         text = "Contraseña",
@@ -145,14 +195,24 @@ fun RegisterScreen(navController: NavController) {
                         tint = Color(0xFFFF9900)
                     )
                 },
-                shape = RoundedCornerShape(13.dp)
+                shape = RoundedCornerShape(13.dp),
+                supportingText = {
+                    if (passwordError.isNotEmpty()) {
+                        Text(
+                            text = passwordError,
+                            color = Color.Red
+                        )
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(10.dp))
 
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = inputConfirmPassword,
+                onValueChange = {
+                    inputConfirmPassword = it
+                },
                 label = {
                     Text(
                         text = "Confirmar Contraseña",
@@ -167,33 +227,75 @@ fun RegisterScreen(navController: NavController) {
                         tint = Color(0xFFFF9900)
                     )
                 },
-                shape = RoundedCornerShape(13.dp)
+                shape = RoundedCornerShape(13.dp),
+                supportingText = {
+                    if (confirmPasswordError.isNotEmpty()) {
+                        Text(
+                            text = confirmPasswordError,
+                            color = Color.Red
+                        )
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = {},
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(45.dp)
-                    .padding(horizontal = 20.dp),
-                shape = RoundedCornerShape(13.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFF9900)
+            if (registerError.isNotEmpty()) {
+                Text(
+                    registerError,
+                    color = Color.Red
                 )
-            ) {
-                Text(text = "Registrarse", color = Color.White, fontSize = 18.sp)
-            }
 
+                Button(
+                    onClick = {
+                        val isValidEmail = validateEmail(inputEmail).first
+                        val isValidPassword = validatePassword(inputPassword).first
+                        val isValidName = validateName(inputName).first
+                        val isValidConfirmPassword =
+                            validateConfirmPassword(inputPassword, inputConfirmPassword).first
+
+
+                        emailError = validateEmail(inputEmail).second
+                        passwordError = validatePassword(inputPassword).second
+                        nameError = validateName(inputName).second
+                        confirmPasswordError =
+                            validateConfirmPassword(inputPassword, inputConfirmPassword).second
+
+                        if (isValidEmail && isValidPassword && isValidName && isValidConfirmPassword) {
+                            auth.createUserWithEmailAndPassword(inputEmail, inputPassword)
+                                .addOnCompleteListener(activity) { task ->
+                                    if (task.isSuccessful) {
+                                        onSuccessfulRegister()
+                                    } else {
+                                        registerError = when (task.isSuccessful) {
+                                            is FirebaseAuthInvalidCredentialsException -> "Correo o contraseña incorrecta"
+                                            is FirebaseAuthUserCollisionException -> "El usuario ya existe"
+                                            else -> "Error al iniciar sesión. Inténtalo de nuevo"
+
+                                        }
+
+                                    }
+
+                                }
+                        } else {
+                            registerError = "Error al registrarse"
+
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(45.dp)
+                        .padding(horizontal = 20.dp),
+                    shape = RoundedCornerShape(13.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFF9900)
+                    )
+                ) {
+                    Text(text = "Registrarse", color = Color.White, fontSize = 18.sp)
+                }
+
+            }
         }
     }
 }
 
-
-@Preview
-@Composable
-fun RegisterScreenPreview() {
-    //RegisterScreen()
-}
 
